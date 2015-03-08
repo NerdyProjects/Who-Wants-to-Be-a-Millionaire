@@ -125,7 +125,7 @@ var MillionaireModel = function(data) {
  			startSound('rightsound', false);
  			$("#" + elm).css('background', 'green').slideDown('slow', function() {
  				self.money($(".active").data('amt'));
- 				if(self.level() + 1 > 15) {
+ 				if(self.level() + 1 > self.questions.length) {
 	 				$("#game").fadeOut('slow', function() {
 	 					$("#game-over").html('You Win!');
 	 					$("#game-over").fadeIn('slow');
@@ -148,18 +148,31 @@ var MillionaireModel = function(data) {
  		$("#" + elm).slideUp('slow', function() {
  			startSound('wrongsound', false);
  			$("#" + elm).css('background', 'red').slideDown('slow', function() {
- 				$("#game").fadeOut('slow', function() {
- 					$("#game-over").html('Game Over!');
- 					$("#game-over").fadeIn('slow');
- 					self.transitioning = false;
- 				});
+        setTimeout(function() {
+          $("#game").fadeOut('slow', function() {
+            $("#game-over").html('Das war leider falsch! Nachdem alle Teilnehmer eine Runde getrunken haben, geht es trotzdem mit der nächsten Frage weiter!');
+            $("#game-over").fadeIn('slow');
+          });
+        }, 1500);
+        setTimeout(function() {
+          $("#game-over").fadeOut('slow', function() {
+            $("#game").fadeIn('slow');
+            self.level(self.level() + 1);
+            $("#" + elm).css('background', 'none');
+            $("#answer-one").show();
+            $("#answer-two").show();
+            $("#answer-three").show();
+            $("#answer-four").show();
+            self.transitioning = false;
+          });
+        }, 10000);
  			});
  		});
  	}
 
  	// Gets the money formatted string of the current won amount of money.
  	self.formatMoney = function() {
-	    return self.money().money(2, '.', ',');
+	    return self.money().money(0, '.', ',');
 	}
 };
 
