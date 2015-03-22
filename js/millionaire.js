@@ -29,11 +29,39 @@ Number.prototype.money = function(fixed, decimalDelim, breakDelim){
 * @param id the id of the element to play
 * @param loop the boolean flag to loop or not loop this sound
 */
-startSound = function(id, loop) {
+startSound = function(id, loop, onEnd) {
 	soundHandle = document.getElementById(id);
 	if(loop)
 		soundHandle.setAttribute('loop', loop);
 	soundHandle.play();
+  if(typeof onEnd != 'undefined') {
+    soundHandle.onended = onEnd;
+  }
+}
+
+playVideo = function(src, onEnd) {
+  /*
+  $("#videoplayer").find("#vid").attr("src", src);
+  $("#videoplayer").show();
+  $("#videoplayer").on("ended", onEnd);
+  */
+  if(typeof src != 'undefined') {
+    var video = document.getElementById('videoplayer');
+    var source = video.getElementsByTagName("source")[0];
+    var bgmusic = document.getElementById('background');
+    bgmusic.pause();
+    video.pause();
+    
+    $("#video").show();
+
+    source.setAttribute('src', "video/" + src); 
+    video.onended = function() { $("#video").hide(); bgmusic.play(); onEnd() };
+
+    video.load();
+    video.play();
+  } else {
+    onEnd();
+  }
 }
 
 /**
@@ -117,28 +145,36 @@ var MillionaireModel = function(data) {
  		}
  	}
 
+
  	// Executes the proceedure of a correct answer guess, moving
  	// the player to the next level (or winning the game if all
  	// levels have been completed)
  	self.rightAnswer = function(elm) {
  		$("#" + elm).slideUp('slow', function() {
- 			startSound('rightsound', false);
  			$("#" + elm).css('background', 'green').slideDown('slow', function() {
  				self.money($(".active").data('amt'));
- 				if(self.level() + 1 > self.questions.length) {
-	 				$("#game").fadeOut('slow', function() {
-	 					$("#game-over").html('You Win!');
-	 					$("#game-over").fadeIn('slow');
-	 				});
- 				} else {
- 					self.level(self.level() + 1);
- 					$("#" + elm).css('background', 'none');
-			 		$("#answer-one").show();
-			 		$("#answer-two").show();
-			 		$("#answer-three").show();
-			 		$("#answer-four").show();
-			 		self.transitioning = false;
- 				}
+        startSound('rightsound', false, function() {
+          $("#game").fadeOut('slow', function() {
+            playVideo(self.questions[self.level() - 1].video, function() {
+              $("#game").fadeIn('slow', function() {
+                if(self.level() + 1 > self.questions.length) {
+                  $("#game").fadeOut('slow', function() {
+                    $("#game-over").html('You Win!');
+                    $("#game-over").fadeIn('slow');
+                  });
+                } else {
+                  self.level(self.level() + 1);
+                  $("#" + elm).css('background', 'none');
+                  $("#answer-one").show();
+                  $("#answer-two").show();
+                  $("#answer-three").show();
+                  $("#answer-four").show();
+                  self.transitioning = false;
+                }
+              });
+            });
+          });
+        });
  			});
  		});
  	}
@@ -150,20 +186,21 @@ var MillionaireModel = function(data) {
  			$("#" + elm).css('background', 'red').slideDown('slow', function() {
         setTimeout(function() {
           $("#game").fadeOut('slow', function() {
-            $("#game-over").html('Das war leider falsch! Nachdem alle Teilnehmer eine Runde getrunken haben, geht es trotzdem mit der nächsten Frage weiter!');
+            $("#game-over").html('Das war leider falsch!<br />Neuer Versuch.<br />Hilft folgender Tipp?');
             $("#game-over").fadeIn('slow');
           });
         }, 1500);
         setTimeout(function() {
           $("#game-over").fadeOut('slow', function() {
-            $("#game").fadeIn('slow');
-            self.level(self.level() + 1);
-            $("#" + elm).css('background', 'none');
-            $("#answer-one").show();
-            $("#answer-two").show();
-            $("#answer-three").show();
-            $("#answer-four").show();
-            self.transitioning = false;
+            playVideo(self.questions[self.level() - 1].video, function() {
+              $("#game").fadeIn('slow');
+              $("#" + elm).css('background', 'none');
+              $("#answer-one").show();
+              $("#answer-two").show();
+              $("#answer-three").show();
+              $("#answer-four").show();
+              self.transitioning = false;
+            });
           });
         }, 10000);
  			});
@@ -176,10 +213,16 @@ var MillionaireModel = function(data) {
 	}
 };
 
+function set_video_height() {
+  $('video').height($(window).height());
+}
+
 // Executes on page load, bootstrapping
 // the start game functionality to trigger a game model
 // being created
 $(document).ready(function() {
+  $(window).bind('resize', set_video_height);
+  set_video_height();
 	$.getJSON("questions.json", function(data) {
 		for(var i = 1; i <= data.games.length; i++) {
 			$("#problem-set").append('<option value="' + i + '">' + i + '</option>');
