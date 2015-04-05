@@ -9,13 +9,15 @@ Author: Aaron Nech
 -->
 <html>
 	<head>
-		<link href="http://fonts.googleapis.com/css?family=Roboto+Slab" rel="stylesheet" type="text/css" />
+    <meta charset="utf-8"/>
+		<link href="css/roboto_slab.css" rel="stylesheet" type="text/css" />
 		<link rel="stylesheet" type="text/css" href="css/style.css" />
 	</head>
 	<body>
 		<!-- HTML5 Audio tags - weakly supported, works in Chrome(tested) -->
 		<audio id="background" src='sound/background.mp3'></audio>
 		<audio id="rightsound" src='sound/right.mp3'></audio>
+		<audio id="winsound" src='sound/richtig_millionenfrage.mp3'></audio>
 		<audio id="wrongsound" src='sound/wrong.mp3'></audio>
 
 		<!-- Before the game begins problem set selection -->
@@ -40,7 +42,6 @@ Author: Aaron Nech
 			<div id="top">
 				<img src="img/bg.svg" id="logo" />
 				<ul id="levels">
-					<li data-bind="css: {active: level() == 11}" data-amt="100" data-lvl="11">Himmelshochzeit</li>
 					<li data-bind="css: {active: level() == 10}" data-amt="60" data-lvl="10">Diamant Hochzeit</li>
 					<li data-bind="css: {active: level() == 9}" data-amt="50" data-lvl="9">Goldene Hochzeit</li>
 					<li data-bind="css: {active: level() == 8}" data-amt="45" data-lvl="8">Rubinen Hochzeit</li>
@@ -55,11 +56,20 @@ Author: Aaron Nech
 				<div class="clear"></div>
 			</div>
 			<div id="options">
+        <!--
 				<div id="fifty" class="options-button" data-bind="click: fifty"></div>
 				<div id="phone-friend" class="options-button" data-bind="click: fadeOutOption"></div>
-				<div id="audience" class="options-button" data-bind="click: fadeOutOption"></div>
+        -->
+				<div id="audience" class="options-button" data-bind="click: schnaps"></div>
 				<div id="money"><span data-bind="text: formatMoney()"></span> Jahre</div>
 			</div>
+      <div id="intro">
+        <span class="big-text">Herzlich Willkommen zu Wer Wird Brautpaar!<br /></span>
+        <span class="big-text">Unsere Kandidaten heute: Corinna und Michael.<br /></span>
+      </div>
+      <div id="outro">
+        <span class="big-text">Herzlichen Glückwunsch!<br /></span>
+      </div>
 			<div id="question-box">
 				<span class="big-text">Q:</span>
 				<span class="content" data-bind="text: getQuestionText()"></span>

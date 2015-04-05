@@ -104,6 +104,40 @@ var MillionaireModel = function(data) {
  	}
 
  	// Uses the fifty-fifty option of the user
+ 	self.schnaps = function(item, event) {
+ 		if(self.transitioning)
+ 			return;
+ 		//$(event.target).fadeOut('slow');
+ 		var correct = this.questions[self.level() - 1].correct;
+    var safety = 100;
+    do {
+      var first = Math.floor((Math.random() * 4));
+      var visible = $('#answer-one').is(':visible');
+      if(first == 1) {
+        visible = $('#answer-two').is(':visible');
+      } else if(first == 2) {
+        visible = $('#answer-three').is(':visible');
+      } else if(first == 3) {
+        visible = $('#answer-four').is(':visible');
+      }
+      safety = safety - 1;
+    } while(safety > 0 && (!visible || first == correct));
+ 		var second = 4;
+ 		if(first == 0 || second == 0) {
+ 			$("#answer-one").fadeOut('slow');
+ 		}
+ 		if(first == 1 || second == 1) {
+ 			$("#answer-two").fadeOut('slow');
+ 		}
+ 		if(first == 2 || second == 2) {
+ 			$("#answer-three").fadeOut('slow');
+ 		}
+ 		if(first == 3 || second == 3) {
+ 			$("#answer-four").fadeOut('slow');
+ 		}
+ 	}
+
+ 	// Uses the fifty-fifty option of the user
  	self.fifty = function(item, event) {
  		if(self.transitioning)
  			return;
@@ -145,6 +179,30 @@ var MillionaireModel = function(data) {
  		}
  	}
 
+  self.replayVideo = function(offset) {
+    $("#game").fadeOut('slow', function() {
+      playVideo(self.questions[self.level() - offset].video, function() {
+        $("#game").fadeIn('slow');
+      });
+    });
+  }
+
+  self.changeLevel = function(inc) {
+    self.level(self.level() + inc);
+  }
+
+  self.win = function() {
+    $("#question-box").fadeOut('slow');
+    $("#answer-box").fadeOut('slow', function() {
+      $("#game-over").html('Herzlichen Glückwunsch!<br />Ihr habt gewonnen!');
+      var bgmusic = document.getElementById('background');
+      bgmusic.pause();
+      $("#outro").fadeIn('slow', function() {
+        startSound('winsound', false);
+      });
+    });
+  };
+
 
  	// Executes the proceedure of a correct answer guess, moving
  	// the player to the next level (or winning the game if all
@@ -158,10 +216,7 @@ var MillionaireModel = function(data) {
             playVideo(self.questions[self.level() - 1].video, function() {
               $("#game").fadeIn('slow', function() {
                 if(self.level() + 1 > self.questions.length) {
-                  $("#game").fadeOut('slow', function() {
-                    $("#game-over").html('You Win!');
-                    $("#game-over").fadeIn('slow');
-                  });
+                  self.win();
                 } else {
                   self.level(self.level() + 1);
                   $("#" + elm).css('background', 'none');
@@ -186,23 +241,27 @@ var MillionaireModel = function(data) {
  			$("#" + elm).css('background', 'red').slideDown('slow', function() {
         setTimeout(function() {
           $("#game").fadeOut('slow', function() {
-            $("#game-over").html('Das war leider falsch!<br />Neuer Versuch.<br />Hilft folgender Tipp?');
-            $("#game-over").fadeIn('slow');
+            if(self.level() > 9) {
+              $("#game-over").html('Leider falsch!<br />!');
+              // Pause bis weiter
+              $("#game-over").fadeIn('slow');
+            } else {
+              $("#game-over").html('<br />Bist Du Dir wirklich sicher?');
+              $("#game-over").fadeIn('slow');
+            }
           });
-        }, 1500);
+        }, 500);
         setTimeout(function() {
           $("#game-over").fadeOut('slow', function() {
-            playVideo(self.questions[self.level() - 1].video, function() {
-              $("#game").fadeIn('slow');
-              $("#" + elm).css('background', 'none');
-              $("#answer-one").show();
-              $("#answer-two").show();
-              $("#answer-three").show();
-              $("#answer-four").show();
-              self.transitioning = false;
-            });
+            $("#game").fadeIn('slow');
+            $("#" + elm).css('background', 'none');
+            $("#answer-one").show();
+            $("#answer-two").show();
+            $("#answer-three").show();
+            $("#answer-four").show();
+            self.transitioning = false;
           });
-        }, 10000);
+        }, 6000);
  			});
  		});
  	}
@@ -223,6 +282,10 @@ function set_video_height() {
 $(document).ready(function() {
   $(window).bind('resize', set_video_height);
   set_video_height();
+  $("#question-box").hide();
+  $("#answer-box").hide();
+  $("#outro").hide();
+
 	$.getJSON("questions.json", function(data) {
 		for(var i = 1; i <= data.games.length; i++) {
 			$("#problem-set").append('<option value="' + i + '">' + i + '</option>');
@@ -230,7 +293,48 @@ $(document).ready(function() {
 		$("#pre-start").show();
 		$("#start").click(function() {
 			var index = $('#problem-set').find(":selected").val() - 1;
-			ko.applyBindings(new MillionaireModel(data.games[index]));
+      var game = new MillionaireModel(data.games[index]);
+			ko.applyBindings(game);
+      $(window).bind('keypress', game, function(event) { 
+        switch(event.which) {
+          case 115:
+            $("#intro").hide();
+            $("#question-box").show();
+            $("#answer-box").show();
+            break;
+          case 97:
+            console.log( event );
+            event.data.answerQuestion(0, "answer-one");
+            break;
+          case 98:
+            event.data.answerQuestion(1, "answer-two");
+            break;
+          case 99:
+            event.data.answerQuestion(2, "answer-three");
+            break;
+          case 100:
+            event.data.answerQuestion(3, "answer-four");
+            break;
+          case 106:
+            event.data.schnaps();
+            break;
+          case 114:
+            event.data.replayVideo(2);
+            break;
+          case 112:
+            event.data.replayVideo(1);
+            break;
+          case 60:
+            event.data.changeLevel(-1);
+            break;
+          case 62:
+            event.data.changeLevel(1);
+            break;
+          case 101:
+            event.data.win();
+            break;
+        }
+      });
 			$("#pre-start").fadeOut('slow', function() {
 				startSound('background', true);
 				$("#game").fadeIn('slow');

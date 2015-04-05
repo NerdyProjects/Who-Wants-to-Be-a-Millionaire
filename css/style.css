@@ -18,6 +18,7 @@ audio {
 
 #video {
   display: none;
+  text-align: center;
 }
 
 #videoplayer {
